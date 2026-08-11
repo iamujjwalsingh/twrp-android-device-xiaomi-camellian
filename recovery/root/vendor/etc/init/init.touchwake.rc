@@ -24,11 +24,14 @@ service nvt_touch_wake_watch /system/bin/sh /vendor/etc/init/nvt_touch_wake_watc
     user root
     group root
     seclabel u:r:recovery:s0
+    disabled
     # not oneshot: runs continuously so init respawns it if it ever dies
 
 on boot
     start nvt_touch_wake
 
 on property:twrp.gui_started=1
+    # Berikan izin eksekusi sebelum memulai watcher
+    chmod 0755 /vendor/etc/init/nvt_touch_wake_watch.sh
     start nvt_touch_wake
     start nvt_touch_wake_watch
