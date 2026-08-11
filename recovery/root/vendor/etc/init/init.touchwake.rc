@@ -5,7 +5,7 @@
 # calls nvt_ts_resume and switches the driver to normal touch reporting.
 # Author: cristi, 2026-05-22.
 
-service nvt_touch_wake /system/bin/sh -c "echo 4 > /sys/class/graphics/fb0/blank; sleep 1; echo 0 > /sys/class/graphics/fb0/blank"
+service nvt_touch_wake /system/bin/sh -c "echo 4 > /sys/class/graphics/fb0/blank; sleep 1; echo 0 > /sys/class/graphics/fb0/blank; log -t nvt_touch_wake 'fb0 blank toggle fired'"
     class core
     user root
     group root
