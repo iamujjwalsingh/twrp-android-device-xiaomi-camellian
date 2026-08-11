@@ -43,6 +43,12 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
   	export OF_HIDE_NOTCH=1
 	export OF_CLOCK_POS=1
 
+	# Fox Build Variable 
+    export OF_QUICK_BACKUP_LIST="/data;/persist;"
+    export OF_DEFAULT_TIMEZONE="WIB-7"
+	export OF_FORCE_USE_RECOVERY_FSTAB=1
+	export OF_FIX_DECRYPTION_ON_DATA_MEDIA=1
+
     # Maximum permissible splash image size (in kilobytes); do *NOT* increase!
 	export OF_SPLASH_MAX_SIZE=130
 
@@ -61,9 +67,7 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
 	export OFOX_MAINTAINER := mt6833
 	export FOX_VARIANT := Stable
 	export FOX_BUILD_TYPE := Unofficial
-	export OF_QUICK_BACKUP_LIST="/data;/persist;"
-    export OF_DEFAULT_TIMEZONE="WIB-7"
-
+	
 	# Magisk
 	function download_magisk(){
 		# Usage: download_magisk <destination_path>
