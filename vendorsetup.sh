@@ -54,8 +54,9 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
 	export OF_FL_PATH1="/system/flashlight"
 
 	# R11.1 Settings
-	export FOX_MAINTAINER_PATCH_VERSION=1
-	export OF_MAINTAINER="Sabrina"
+	export OFOX_MAINTAINER := mt6833-devs
+	export FOX_VARIANT := Stable
+	export FOX_BUILD_TYPE := Unofficial
 
 	# Magisk
 	function download_magisk(){
