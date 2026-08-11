@@ -16,11 +16,11 @@ on:
       DEVICE_TREE:
         description: 'Custom Recovery Tree' 
         required: true
-        default: 'https://github.com/rwxrx-rx/twrp-device-xiaomi-camelia'
+        default: 'https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia'
       DEVICE_TREE_BRANCH:
         description: 'Custom Recovery Tree Branch' 
         required: true
-        default: 'android-12.1'
+        default: 'main'
       DEVICE_PATH:
         description: 'Specify your Device Path' 
         required: true
