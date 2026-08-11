@@ -51,6 +51,7 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
 	export TARGET_DEVICE_ALT="camellia,camellian"
 
 	# Flashlight
+	export OF_FLASHLIGHT_ENABLE=1
 	export OF_FL_PATH1="/system/flashlight"
 
 	# R11.1 Settings
