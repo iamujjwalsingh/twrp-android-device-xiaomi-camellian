@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2023 The OrangeFox Recovery Project
+# Copyright (C) 2024 The Team Win Recovery Project
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -9,8 +9,9 @@ DEVICE_PATH := device/xiaomi/camellia
 # For building with minimal manifest
 ALLOW_MISSING_DEPENDENCIES := true
 
-# A/B
+# A/B & Virtual A/B
 AB_OTA_UPDATER := true
+BOARD_USES_RECOVERY_AS_BOOT := true
 
 AB_OTA_PARTITIONS += \
     boot \
@@ -22,8 +23,6 @@ AB_OTA_PARTITIONS += \
     vbmeta \
     vbmeta_system \
     vbmeta_vendor
-
-BOARD_USES_RECOVERY_AS_BOOT := true
 
 # Architecture
 TARGET_ARCH := arm64
@@ -78,10 +77,8 @@ BUILD_BROKEN_DUP_RULES := true
 BUILD_BROKEN_PREBUILT_ELF_FILES := true
 BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
 
-# Metadata
+# Partitions (Dynamic & Metadata)
 BOARD_USES_METADATA_PARTITION := true
-
-# Partitions
 BOARD_FLASH_BLOCK_SIZE := 131072
 BOARD_BOOTIMAGE_PARTITION_SIZE := 67108864
 BOARD_SUPER_PARTITION_SIZE := 9126805504
@@ -90,7 +87,7 @@ BOARD_XIAOMI_DYNAMIC_PARTITIONS_PARTITION_LIST := \
     system \
     system_ext \
     product \
-    vendor \
+    vendor
 
 BOARD_XIAOMI_DYNAMIC_PARTITIONS_SIZE := 9122611200
 
@@ -112,13 +109,13 @@ TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_USERIMAGES_USE_F2FS := true
 
-# Security Patch
+# Security Patch (Gunakan format YYYY-MM-DD standar TWRP)
 PLATFORM_SECURITY_PATCH := 2127-12-31
 VENDOR_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 PLATFORM_VERSION := 99.87.36
 PLATFORM_VERSION_LAST_STABLE := $(PLATFORM_VERSION)
 
-# TWRP
+# TWRP Configuration
 TW_THEME := portrait_hdpi
 TW_EXTRA_LANGUAGES := true
 TW_SCREEN_BLANK_ON_BOOT := true
@@ -131,25 +128,21 @@ TW_DEFAULT_BRIGHTNESS := 1024
 TW_MAX_BRIGHTNESS := 2047
 TW_INCLUDE_NTFS_3G := true
 TARGET_USES_MKE2FS := true
-TW_INCLUDE_PYTHON := true
+TW_FRAMERATE := 90
+TW_NO_FASTBOOT_BOOT := true
+# TW_INCLUDE_PYTHON := true # (Bisa di-uncomment jika butuh skrip khusus, tapi Official TWRP jarang meminta ini secara default)
 
-# TWRP (Crypto)
+# TWRP Crypto (FBE)
 TW_INCLUDE_CRYPTO := true
 TW_INCLUDE_CRYPTO_FBE := true
 TW_INCLUDE_FBE_METADATA_DECRYPT := true
 TW_PREPARE_DATA_MEDIA_EARLY := true
 
-# TWRP (Debug)
+# TWRP Debug
 TWRP_INCLUDE_LOGCAT := true
 TARGET_USES_LOGD := true
 
-# TWRP (Refresh Rate)
-TW_FRAMERATE := 90
-
-# This device does not support fastboot boot, do *NOT* remove!
-TW_NO_FASTBOOT_BOOT := true
-
-# Verified Boot
+# Verified Boot (AVB)
 BOARD_AVB_ENABLE := true
 BOARD_AVB_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
@@ -171,3 +164,4 @@ BOARD_AVB_VBMETA_VENDOR_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
 BOARD_AVB_VBMETA_VENDOR_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX := 1
 BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX_LOCATION := 3
+
