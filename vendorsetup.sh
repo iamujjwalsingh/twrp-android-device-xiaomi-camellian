@@ -61,6 +61,8 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
 	export OFOX_MAINTAINER := mt6833
 	export FOX_VARIANT := Stable
 	export FOX_BUILD_TYPE := Unofficial
+	export OF_QUICK_BACKUP_LIST="/data;/persist;"
+    export OF_DEFAULT_TIMEZONE="WIB-7"
 
 	# Magisk
 	function download_magisk(){
