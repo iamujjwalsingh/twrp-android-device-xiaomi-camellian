@@ -43,6 +43,9 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
   	export OF_HIDE_NOTCH=1
 	export OF_CLOCK_POS=1
 
+    # Maximum permissible splash image size (in kilobytes); do *NOT* increase!
+	export OF_SPLASH_MAX_SIZE=130
+
 	# MediaTek
 	export FOX_RECOVERY_BOOT_PARTITION="/dev/block/by-name/boot"
 
@@ -54,8 +57,8 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
 	export OF_FLASHLIGHT_ENABLE=1
 	export OF_FL_PATH1="/system/flashlight"
 
-	# R11.1 Settings
-	export OFOX_MAINTAINER := mt6833-devs
+	# R12.1 Settings
+	export OFOX_MAINTAINER := mt6833
 	export FOX_VARIANT := Stable
 	export FOX_BUILD_TYPE := Unofficial
 
