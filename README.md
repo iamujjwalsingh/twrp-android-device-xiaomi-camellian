@@ -1,6 +1,6 @@
 # 🦊 OrangeFox Recovery for Xiaomi Redmi Note 10 5G (`camellia`)
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/cristidclxvi/device_xiaomi_camellia-fox/build.yml?branch=fox_12.1&label=OrangeFox%20Build&style=for-the-badge&color=FF7F00)](https://github.com/rwxrx-rx/fox-device-camellia/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/rwxrx-rx/fox-twrp-device-camellia/build.yaml?branch=fox_12.1&label=OrangeFox%20Build&style=for-the-badge&color=FF7F00)](https://github.com/rwxrx-rx/fox-twrp-device-camellia/actions)
 ![Android Version](https://img.shields.io/badge/Android-13-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![OrangeFox](https://img.shields.io/badge/OrangeFox-12.1-FF7F00?style=for-the-badge)
 
@@ -57,3 +57,16 @@ export FOX_BUILD_DEVICE=camellia
 # 5. Build
 lunch twrp_camellia-eng
 mka adbd bootimage recoveryimage
+
+```
+## 🤝 Credits & Acknowledgments
+
+A huge thank you to the following teams, developers, and contributors for their work, code, and support:
+
+* **[TeamWin (TWRP)](https://github.com/TeamWin)** — For the foundational recovery source.
+* **[OrangeFox Recovery Project](https://gitlab.com/OrangeFox)** — For the amazing recovery platform and source code.
+* **[that1](https://github.com/that1)** — For contributions and support.
+* **[cd-Crypton](https://github.com/cd-Crypton)** — For development tools and base work.
+* **[azwhikaru](https://github.com/azwhikaru)** — For contributions and assistance.
+* **[cristidclxvi](https://github.com/cristidclxvi/device_xiaomi_camellia-fox)** — For the NVT touchscreen panel fixes in recovery.
+* **All Open-Source Contributors** — For every repository, helper script, and feedback utilized in bringing this project together.
