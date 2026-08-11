@@ -91,18 +91,24 @@ jobs:
             exit 0
           fi
 
+          esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+          DEVICE_NAME_ESC=$(printf '%s' "${{ github.event.inputs.DEVICE_NAME }}" | esc)
+          BRANCH_ESC=$(printf '%s' "${{ github.event.inputs.MANIFEST_BRANCH }}" | esc)
+          TARGET_ESC=$(printf '%s' "${{ github.event.inputs.BUILD_TARGET }}" | esc)
+          ACTOR_ESC=$(printf '%s' "${{ github.actor }}" | esc)
+
           cat > "${GITHUB_WORKSPACE}/tg_start.txt" <<EOF
-          🛠 *Build started* — \`${{ github.event.inputs.DEVICE_NAME }}\`
-          Branch: \`${{ github.event.inputs.MANIFEST_BRANCH }}\`
-          Target: \`${{ github.event.inputs.BUILD_TARGET }}\`
+          🛠 <b>Build started</b> — <code>${DEVICE_NAME_ESC}</code>
+          Branch: <code>${BRANCH_ESC}</code>
+          Target: <code>${TARGET_ESC}</code>
           Device tree: ${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}
-          Triggered by: ${{ github.actor }}
+          Triggered by: ${ACTOR_ESC}
           Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EOF
 
           RESP=$(curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d parse_mode="Markdown" \
+            -d parse_mode="HTML" \
             --data-urlencode text@"${GITHUB_WORKSPACE}/tg_start.txt")
           echo "Telegram response: $RESP"
           echo "$RESP" | grep -q '"ok":true' || echo "::warning::Telegram sendMessage (start notice) failed — see response above"
@@ -146,6 +152,9 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ github.event.inputs.MANIFEST_BRANCH }}/${{ github.event.inputs.DEVICE_PATH }}
           git log -10 --pretty=format:"- %s (%h)" > "${GITHUB_WORKSPACE}/changelog.txt" || echo "- (no changelog available)" > "${GITHUB_WORKSPACE}/changelog.txt"
+          # HTML-escaped copy, safe to embed in Telegram parse_mode=HTML messages
+          sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' \
+            "${GITHUB_WORKSPACE}/changelog.txt" > "${GITHUB_WORKSPACE}/changelog_tg.txt"
           echo "Changelog:"
           cat "${GITHUB_WORKSPACE}/changelog.txt"
 
@@ -294,23 +303,29 @@ jobs:
 
           RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${{ github.run_id }}"
 
+          esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+          DEVICE_NAME_ESC=$(printf '%s' "${{ github.event.inputs.DEVICE_NAME }}" | esc)
+          BRANCH_ESC=$(printf '%s' "${{ github.event.inputs.MANIFEST_BRANCH }}" | esc)
+          RECOVERY_TYPE_ESC=$(printf '%s' "${{ env.RECOVERY_TYPE }}" | esc)
+          MD5_ESC=$(printf '%s' "${{ env.MD5_IMG }}" | esc)
+
           cat > "${GITHUB_WORKSPACE}/tg_done.txt" <<EOF
-          ✅ *OrangeFox Unofficial* — \`${{ github.event.inputs.DEVICE_NAME }}\`
-          Branch: \`${{ github.event.inputs.MANIFEST_BRANCH }}\`
-          Target: \`${{ env.RECOVERY_TYPE }}.img\`
+          ✅ <b>OrangeFox Unofficial</b> — <code>${DEVICE_NAME_ESC}</code>
+          Branch: <code>${BRANCH_ESC}</code>
+          Target: <code>${RECOVERY_TYPE_ESC}.img</code>
           Device tree: ${{ env.DEVICE_TREE_URL }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}
           Commit: ${{ env.DEVICE_TREE_URL }}/commit/${{ env.COMMIT_ID }}
-          MD5: \`${{ env.MD5_IMG }}\`
+          MD5: <code>${MD5_ESC}</code>
           Build date: ${{ env.BUILD_DATE }}
           Release: ${RELEASE_URL}
 
           Changelog (last 10 commits):
-          $(cat "${GITHUB_WORKSPACE}/changelog.txt")
+          $(cat "${GITHUB_WORKSPACE}/changelog_tg.txt")
           EOF
 
           RESP=$(curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d parse_mode="Markdown" \
+            -d parse_mode="HTML" \
             --data-urlencode text@"${GITHUB_WORKSPACE}/tg_done.txt")
           echo "Telegram response: $RESP"
           echo "$RESP" | grep -q '"ok":true' || echo "::warning::Telegram sendMessage (done notice) failed — see response above"
