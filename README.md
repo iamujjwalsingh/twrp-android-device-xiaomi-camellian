@@ -8,19 +8,16 @@
 
 An unofficial OrangeFox Recovery device tree for the **Xiaomi Redmi Note 10 5G** (`camellia`, MediaTek MT6833), featuring a dedicated fix to get the NVT touchscreen working properly in recovery mode.
 
----
-
 ## 📱 Compatibility & Tested Devices
 
 This tree has been tested and verified on the following setup:
 
 | Device | Model | MIUI Version | Android | Kernel | Touch IC | Panel |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Redmi Note 10 5G** | `M2103K19C` | `V14.0.6.0.TKSMIXM` | 13 | `4.14.186-perf-g82b8a4552e62` | Novatek `NT36672C` (FW 0x12) | Tianma |
+| **Redmi Note 10 5G** | `M2103K19C` | `V14.0.6.0.TKSMIXM` | 12-16 | `4.14.357-openela-rc1-flyme` | Novatek `NT36672C` (FW 0x12) | Tianma |
 
 > **Note:** This recovery image is highly likely to work on sibling "camellian" devices (Redmi Note 10T 5G, Redmi Note 11 SE, POCO M3 Pro 5G), provided the bootloader is unlocked.
 
----
 
 ## 🛠️ Automated Build (CI/CD)
 
