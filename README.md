@@ -1,8 +1,10 @@
-# OrangeFox Recovery for Xiaomi Redmi Note 10 5G (camellia)
+# 🦊 OrangeFox Recovery for Xiaomi Redmi Note 10 5G (`camellia`)
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/cristidclxvi/device_xiaomi_camellia-fox/build.yml?branch=fox_12.1&label=OrangeFox%20Build&style=for-the-badge)
-![Android Version](https://img.shields.io/badge/Android-13-green?style=for-the-badge)
-![OrangeFox](https://img.shields.io/badge/OrangeFox-12.1-orange?style=for-the-badge)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/cristidclxvi/device_xiaomi_camellia-fox/build.yml?branch=fox_12.1&label=OrangeFox%20Build&style=for-the-badge&color=FF7F00)](https://github.com/rwxrx-rx/fox-device-camellia/actions)
+![Android Version](https://img.shields.io/badge/Android-13-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![OrangeFox](https://img.shields.io/badge/OrangeFox-12.1-FF7F00?style=for-the-badge)
+
+---
 
 An unofficial OrangeFox Recovery device tree for the **Xiaomi Redmi Note 10 5G** (`camellia`, MediaTek MT6833), featuring a dedicated fix to get the NVT touchscreen working properly in recovery mode.
 
