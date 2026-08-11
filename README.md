@@ -12,11 +12,11 @@ An unofficial OrangeFox Recovery device tree for the **Xiaomi Redmi Note 10 5G**
 
 This tree has been tested and verified on the following setup:
 
-| Device | Model | MIUI Version | Android | Kernel | Touch IC | Panel |
+| Device | Model | ROM | Android | Kernel | Touch IC | Panel |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Redmi Note 10 5G** | `M2103K19C` | `V14.0.6.0.TKSMIXM` | 12-16 | `4.14.357-openela-rc1-flyme` | Novatek `NT36672C` (FW 0x12) | Tianma |
+| **Poco M3 Pro 5G / Redmi Note 10 5G** (`camellia`/`camellian`) | `M2103K19C` | Evolution X | 16 | `4.14.357-openela-rc1-flyme` | Novatek `NT36672C` (FW 0x12) | Tianma |
 
-> **Note:** This recovery image is highly likely to work on sibling "camellian" devices (Redmi Note 10T 5G, Redmi Note 11 SE, POCO M3 Pro 5G), provided the bootloader is unlocked.
+> **Note:** This recovery image is highly likely to work on sibling "camellian" devices (Redmi Note 10T 5G, Redmi Note 11 SE, Redmi Note 10 5G), provided the bootloader is unlocked.
 
 
 ## 🛠️ Automated Build (CI/CD)
