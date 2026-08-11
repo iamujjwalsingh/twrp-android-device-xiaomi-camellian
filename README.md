@@ -1,59 +1,54 @@
-# 🦊 OrangeFox Recovery for Xiaomi Redmi Note 10 5G (`camellia`)
+# TWRP Device Tree for Xiaomi Redmi Note 10 5G (camellia)
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/rwxrx-rx/fox-twrp-device-camellia/build.yaml?branch=fox_12.1&label=OrangeFox%20Build&style=for-the-badge&color=FF7F00)](https://github.com/rwxrx-rx/fox-twrp-device-camellia/actions)
-![Android Version](https://img.shields.io/badge/Android-13-3DDC84?style=for-the-badge&logo=android&logoColor=white)
-![OrangeFox](https://img.shields.io/badge/OrangeFox-12.1-FF7F00?style=for-the-badge)
+![TWRP Build](https://img.shields.io/github/actions/workflow/status/rwxrx-rx/twrp-android-device-xiaomi-camellia/build.yaml?branch=main&label=Build%20Status&style=for-the-badge&color=1F883D)
+![Android Version](https://img.shields.io/badge/Android-12.1-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 
 ---
 
-An unofficial OrangeFox Recovery device tree for the **Xiaomi Redmi Note 10 5G** (`camellia`, MediaTek MT6833), featuring a dedicated fix to get the NVT touchscreen working properly in recovery mode.
+This repository contains the official-standard **Team Win Recovery Project (TWRP)** device tree for the **Xiaomi Redmi Note 10 5G** (codename `camellia`/`camellian`).
 
-## 📱 Compatibility & Tested Devices
+## 📱 Compatibility
 
-This tree has been tested and verified on the following setup:
+This tree is designed for the MediaTek MT6833 platform.
 
 | Device | Model | ROM | Android | Kernel | Touch IC | Panel |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Poco M3 Pro 5G / Redmi Note 10 5G** (`camellia`/`camellian`) | `M2103K19C` | Evolution X | 16 | `4.14.357-openela-rc1-flyme` | Novatek `NT36672C` (FW 0x12) | Tianma |
+| **Poco M3 Pro 5G** (`camellia`/`camellian`) | `M2103K19C` | Evolution X | 16 | `4.14.357-openela-rc1-flyme` | Novatek `NT36672C` (FW 0x12) | Tianma |
 
 > **Note:** This recovery image is highly likely to work on sibling "camellian" devices (Redmi Note 10T 5G, Redmi Note 11 SE, Redmi Note 10 5G), provided the bootloader is unlocked.
 
 
-## 🛠️ Automated Build (CI/CD)
 
-You no longer need to download the massive Android source tree to build this recovery. This repository uses **GitHub Actions** to automatically compile OrangeFox.
+## 🛠️ Build using GitHub Actions (CI)
 
-1. Go to the **[Actions](../../actions)** tab in this repository.
-2. Select **OrangeFox CI Build** on the left sidebar.
+You can build this recovery automatically using the built-in GitHub Actions workflow.
+
+1. Navigate to the **[Actions](../../actions)** tab.
+2. Select **TWRP Build** from the left menu.
 3. Click **Run workflow** -> **Run**.
-4. Wait for the build to complete (usually takes ~30-45 minutes).
-5. Download your compiled `OrangeFox-camellia.img` from the **Artifacts** section at the bottom of the build summary.
-
----
+4. Once completed, your build will be available as an Artifact or Release.
 
 ## 💻 Manual Local Build
 
-If you prefer to build it locally on your own machine, follow these steps:
+To build the recovery locally, follow these steps:
 
 ```bash
-# 1. Setup working directory
-mkdir OFRP_12.1 && cd OFRP_12.1
+# 1. Prepare Workspace
+mkdir twrp-workspace && cd twrp-workspace
 
-# 2. Sync OrangeFox Source
-git clone [https://gitlab.com/OrangeFox/sync.git](https://gitlab.com/OrangeFox/sync.git)
-bash sync/orangefox_sync.sh --branch 12.1 --path "$PWD"
+# 2. Sync TWRP Manifest
+repo init --depth=1 -u [https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git](https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git) -b twrp-12.1
+repo sync -j$(nproc --all) --force-sync
 
 # 3. Clone this device tree
-git clone -b fox_12.1 [https://github.com/cristidclxvi/device_xiaomi_camellia-fox.git](https://github.com/cristidclxvi/device_xiaomi_camellia-fox.git) device/xiaomi/camellia
+git clone [https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia.git](https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia.git) -b android-12.1 device/xiaomi/camellia
 
-# 4. Initialize build environment
-. build/envsetup.sh
+# 4. Build
+source build/envsetup.sh
 export ALLOW_MISSING_DEPENDENCIES=true
-export FOX_BUILD_DEVICE=camellia
-
-# 5. Build
 lunch twrp_camellia-eng
-mka adbd bootimage recoveryimage
+make clean
+make recoveryimage -j$(nproc --all)
 
 ```
 ## 🤝 Credits & Acknowledgments
