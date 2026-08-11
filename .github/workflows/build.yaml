@@ -100,10 +100,12 @@ jobs:
           Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EOF
 
-          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          RESP=$(curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
-            --data-urlencode text@"${GITHUB_WORKSPACE}/tg_start.txt" > /dev/null
+            --data-urlencode text@"${GITHUB_WORKSPACE}/tg_start.txt")
+          echo "Telegram response: $RESP"
+          echo "$RESP" | grep -q '"ok":true' || echo "::warning::Telegram sendMessage (start notice) failed — see response above"
         continue-on-error: true
 
       - name: Clean-up
@@ -306,10 +308,12 @@ jobs:
           $(cat "${GITHUB_WORKSPACE}/changelog.txt")
           EOF
 
-          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          RESP=$(curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d parse_mode="Markdown" \
-            --data-urlencode text@"${GITHUB_WORKSPACE}/tg_done.txt" > /dev/null
+            --data-urlencode text@"${GITHUB_WORKSPACE}/tg_done.txt")
+          echo "Telegram response: $RESP"
+          echo "$RESP" | grep -q '"ok":true' || echo "::warning::Telegram sendMessage (done notice) failed — see response above"
 
           send_file() {
             local file="$1"
@@ -321,10 +325,13 @@ jobs:
             local max=$((49 * 1024 * 1024))
             if [ "$size" -le "$max" ]; then
               echo "Uploading $file to Telegram (${size} bytes)..."
-              curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+              local r
+              r=$(curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
                 -F chat_id="${TELEGRAM_CHAT_ID}" \
                 -F document=@"${file}" \
-                -F caption="$(basename "$file")" > /dev/null
+                -F caption="$(basename "$file")")
+              echo "Telegram response: $r"
+              echo "$r" | grep -q '"ok":true' || echo "::warning::Telegram sendDocument for $file failed — see response above"
             else
               echo "$file is ${size} bytes, over Telegram's 49MB bot upload limit."
               printf '%s is too large for direct upload (%s bytes). Download it from the release: %s' \
