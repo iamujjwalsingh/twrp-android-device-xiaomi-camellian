@@ -9,8 +9,15 @@
 # stuck until reboot — nvt_touch_wake_watch keeps watching and re-fires the
 # same toggle on every subsequent wake, not just at boot.
 #
+# NOTE: do NOT gate either service on "on property:twrp.gui_started=1".
+# This rc file is parsed in the vendor_init domain, which is denied read
+# access to that property (avc: denied { read } for property=twrp.gui_started
+# scontext=u:r:vendor_init:s0 ... permissive=0) — the trigger silently never
+# fires, so a service that only starts on it never starts at all. Both
+# services below are started from "on boot" instead, which vendor_init can
+# always evaluate.
+#
 # Author: cristi, 2026-05-22.
-# Author: rwxrxrx, 2026-08-11
 
 service nvt_touch_wake /system/bin/sh -c "echo 4 > /sys/class/graphics/fb0/blank; sleep 1; echo 0 > /sys/class/graphics/fb0/blank; log -t nvt_touch_wake 'boot toggle fired'"
     class core
@@ -24,14 +31,9 @@ service nvt_touch_wake_watch /system/bin/sh /vendor/etc/init/nvt_touch_wake_watc
     user root
     group root
     seclabel u:r:recovery:s0
-    disabled
     # not oneshot: runs continuously so init respawns it if it ever dies
 
 on boot
     start nvt_touch_wake
-
-on property:twrp.gui_started=1
-    # Berikan izin eksekusi sebelum memulai watcher
-    chmod 0755 /vendor/etc/init/nvt_touch_wake_watch.sh
-    start nvt_touch_wake
     start nvt_touch_wake_watch
+
