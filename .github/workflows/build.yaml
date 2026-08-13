@@ -24,11 +24,11 @@ on:
       DEVICE_PATH:
         description: 'Specify your Device Path' 
         required: true
-        default: 'device/xiaomi/camelia'
+        default: 'device/xiaomi/camellia'
       DEVICE_NAME:
         description: 'Specify your Device Codename' 
         required: true
-        default: 'camelia'
+        default: 'camellia'
       BUILD_TARGET:
         description: 'Specify your Build Target' 
         required: true
