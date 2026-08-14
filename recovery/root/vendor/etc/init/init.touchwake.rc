@@ -36,4 +36,3 @@ service nvt_touch_wake_watch /system/bin/sh /vendor/etc/init/nvt_touch_wake_watc
 on boot
     start nvt_touch_wake
     start nvt_touch_wake_watch
-
