@@ -7,17 +7,38 @@
 
 This repository contains the official-standard **Team Win Recovery Project (TWRP)** device tree for the **Xiaomi Redmi Note 10 5G** (codename `camellia`/`camellian`).
 
-## 📱 Compatibility
+## 📱 Compatibility & Tested Devices
 
-This tree is designed for the MediaTek MT6833 platform.
+| Features | Specifications |
+| :--- | :--- |
+| **Device** | Xiaomi Redmi Note 10 5G / POCO M3 Pro 5G |
+| **Codename** | `camellia` |
+| **SoC** | MediaTek MT6833 Dimensity 700 (7 nm) |
+| **CPU** | Octa-core (2x2.2 GHz Cortex-A76 & 6x2.0 GHz Cortex-A55) |
+| **GPU** | Mali-G57 MC2 |
+| **Display** | 6.5" IPS LCD, 90Hz (1080 x 2400 pixels) |
+| **Memory** | 4GB / 6GB / 8GB RAM |
+| **Storage** | 64GB / 128GB / 256GB (UFS 2.2) |
+| **Battery** | 5000 mAh (18W Fast Charging) |
+| **Touch IC** | Novatek `NT36672C` |
+| **Panel** | Tianma |
 
-| Device | Model | ROM | Android | Kernel | Touch IC | Panel |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Poco M3 Pro 5G** (`camellia`/`camellian`) | `M2103K19C` | Evolution X | 16 | `4.14.357-openela-rc1-flyme` | Novatek `NT36672C` (FW 0x12) | Tianma |
+> **Note:** This recovery image is highly likely to work on sibling "camellian" devices (Redmi Note 10T 5G, Redmi Note 11 SE, POCO M3 Pro 5G), provided the bootloader is unlocked.
 
-> **Note:** This recovery image is highly likely to work on sibling "camellian" devices (Redmi Note 10T 5G, Redmi Note 11 SE, Redmi Note 10 5G), provided the bootloader is unlocked.
+---
 
+## 🐛 NVT Touchscreen Wake Fix Explained
 
+On `camellia` devices equipped with Novatek (NVT) touch panels, a common bug occurs where the **touchscreen stops responding after the screen turns off** (via timeout or power button) and turns back on in recovery.
+
+* **The Cause:** When the screen blanks, the NVT driver drops into a `wakeup-gesture` suspend mode. In a normal system boot, waking the device fires the `fb_notifier`, which calls `nvt_ts_resume` and kicks the driver back to normal touch reporting. However, in recovery environments, screen dimming turns off the backlight directly without updating the framebuffer (`/sys/class/graphics/fb0/blank`). Because the framebuffer status never changes to `1` (blank), the NVT driver remains stuck in gesture mode and no touch events reach userspace.
+* **The Solution:** This tree utilizes a custom background daemon (`nvt_touch_wake_watch.sh`) that continuously monitors the screen's backlight brightness node (`/sys/class/leds/lcd-backlight/brightness`). Whenever the script detects the screen waking up (brightness changing from `0` to `> 0`), it rapidly writes `4` then `0` to `fb0/blank` to manually trigger the framebuffer toggle, successfully forcing the NVT driver to resume normal multi-touch reporting on every wake.
+* **⚡ Responsiveness Optimization:** To eliminate any noticeable delay, the background daemon is optimized with aggressive polling intervals:
+  * **Polling Interval:** Set to `0.1s` for near-instant screen wake detection.
+  * **Framebuffer Toggle Delay:** Minimized to `0.05s` to speed up the `nvt_ts_resume` hook.
+  *(Note: These services are initialized from the `on boot` trigger in `init.touchwake.rc` to bypass SELinux `vendor_init` property read denials).*
+
+---
 
 ## 🛠️ Build using GitHub Actions (CI)
 
@@ -41,7 +62,7 @@ repo init --depth=1 -u [https://github.com/minimal-manifest-twrp/platform_manife
 repo sync -j$(nproc --all) --force-sync
 
 # 3. Clone this device tree
-git clone [https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia.git](https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia.git) -b android-12.1 device/xiaomi/camellia
+git clone [https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia.git](https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia.git) -b main device/xiaomi/camellia
 
 # 4. Build
 source build/envsetup.sh
