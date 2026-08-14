@@ -12,15 +12,15 @@ FB_BLANK=/sys/class/graphics/fb0/blank
 # give the framebuffer sysfs node a moment to exist before we start polling it.
 sleep 2
 
-read prev < "$FB_BLANK" 2>/dev/null
+prev="$(cat "$FB_BLANK" 2>/dev/null)"
 
 while true; do
-    sleep 0.1
-    read cur < "$FB_BLANK" 2>/dev/null
+    sleep 0.5
+    cur="$(cat "$FB_BLANK" 2>/dev/null)"
     if [ "$prev" = "1" ] && [ "$cur" = "0" ]; then
         log -t nvt_touch_wake "screen woke, re-kicking NVT driver"
         echo 4 > "$FB_BLANK"
-        sleep 0.1
+        sleep 0.2
         echo 0 > "$FB_BLANK"
         cur=0
     fi
