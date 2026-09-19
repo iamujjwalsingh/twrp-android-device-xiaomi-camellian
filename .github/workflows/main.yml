@@ -1,0 +1,326 @@
+name: TWRP Recovery Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      MANIFEST_BRANCH:
+        description: 'TWRP Minimal-Manifest Branch'
+        required: true
+        default: 'twrp-12.1'
+        type: choice
+        options:
+        - twrp-14.1
+        - twrp-12.1
+        - twrp-11
+        - twrp-9.0
+      DEVICE_TREE:
+        description: 'Custom Recovery Tree (URL)' 
+        required: true
+        default: 'https://github.com/rwxrx-rx/twrp-android-device-xiaomi-camellia'
+      DEVICE_TREE_BRANCH:
+        description: 'Custom Recovery Tree Branch' 
+        required: true
+        default: 'android_12.1'
+      DEVICE_PATH:
+        description: 'Specify your Device Path' 
+        required: true
+        default: 'device/xiaomi/camellia'
+      DEVICE_NAME:
+        description: 'Specify your Device Codename' 
+        required: true
+        default: 'camellia'
+      BUILD_TARGET:
+        description: 'Specify your Build Target' 
+        required: true
+        default: 'boot'
+        type: choice
+        options:
+        - boot
+        - recovery
+        - vendorboot
+      LDCHECK:
+        description: 'Path of blobs to check' 
+        required: true
+        default: 'system/bin/qseecomd'
+      RECOVERY_TAR:
+        description: 'Release Recovery.tar For Samsung devices'
+        required: false
+        default: false
+        type: boolean
+      RECOVERY_INSTALLER:
+        description: 'Include recovery installer.zip'
+        type: boolean
+        required: true
+        default: true
+      SEND_TO_TELEGRAM:
+        description: 'Push build result to Telegram'
+        type: boolean
+        required: true
+        default: true
+
+jobs:
+  build:
+    name: Build TWRP by ${{ github.actor }}
+    runs-on: ubuntu-22.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+    steps:
+    - name: Check Out
+      uses: actions/checkout@v4
+      
+    - name: Display Inputs
+      run: |
+        echo "::group::User Environment Variables"
+        echo "Manifest Branch: ${{ github.event.inputs.MANIFEST_BRANCH }}"
+        echo "Device Tree: ${{ github.event.inputs.DEVICE_TREE }}"
+        echo "Device Branch: ${{ github.event.inputs.DEVICE_TREE_BRANCH }}"
+        echo "Device Path: ${{ github.event.inputs.DEVICE_PATH }}"
+        echo "Device Name: ${{ github.event.inputs.DEVICE_NAME }}"
+        echo "Build Target: ${{ github.event.inputs.BUILD_TARGET }}image"
+        echo "Include Recovery Installer: ${{ github.event.inputs.RECOVERY_INSTALLER }}"
+        echo "Release recovery.tar For Samsung: ${{ github.event.inputs.RECOVERY_TAR }}"
+        echo "Send to Telegram: ${{ github.event.inputs.SEND_TO_TELEGRAM }}"
+        echo "::endgroup::"
+
+    - name: "Telegram: Notify build started"
+      if: github.event.inputs.SEND_TO_TELEGRAM == 'true'
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: |
+        if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+          echo "Telegram secrets are not set. Skipping start notice."
+          exit 0
+        fi
+        esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+        
+        cat > "${GITHUB_WORKSPACE}/tg_start.txt" <<EOF
+        🛠 <b>TWRP Build Started!</b>
+        
+        📱 <b>Device:</b> <code>$(echo "${{ github.event.inputs.DEVICE_NAME }}" | esc)</code>
+        🌿 <b>Manifest:</b> <code>$(echo "${{ github.event.inputs.MANIFEST_BRANCH }}" | esc)</code>
+        🎯 <b>Target:</b> <code>$(echo "${{ github.event.inputs.BUILD_TARGET }}" | esc)</code>
+        
+        🌲 <b>Tree:</b> <a href="${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}">${{ github.event.inputs.DEVICE_TREE_BRANCH }}</a>
+        👤 <b>Triggered by:</b> $(echo "${{ github.actor }}" | esc)
+        
+        🔗 <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Action Run</a>
+        EOF
+        
+        curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          -d chat_id="${TELEGRAM_CHAT_ID}" \
+          -d parse_mode="HTML" \
+          -d disable_web_page_preview="true" \
+          --data-urlencode text@"${GITHUB_WORKSPACE}/tg_start.txt" || true
+
+    - name: Cleanup Space
+      uses: rokibhasansagar/slimhub_actions@main
+      
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 24
+        
+    - name: Prepare the Environment
+      run: |
+        sudo apt update
+        sudo apt -y upgrade
+        sudo apt -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib lib32ncurses5-dev x11proto-core-dev lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev libtinfo5 libgflags-dev python3
+        sudo add-apt-repository universe
+        sudo apt -y install libncurses5
+
+    - name: Install OpenJDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: zulu
+        java-version: 8
+
+    - name: Install Git-Repo
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        sudo ln -sf ~/bin/repo /usr/bin/repo
+
+    - name: Check Manifest Branch
+      uses: haya14busa/action-cond@v1
+      id: manifest
+      with:
+        cond: ${{ contains(github.event.inputs.MANIFEST_BRANCH, 'twrp-11') || contains(github.event.inputs.MANIFEST_BRANCH, 'twrp-12.1') || contains(github.event.inputs.MANIFEST_BRANCH, 'twrp-14.1') }}
+        if_true: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
+        if_false: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git
+
+    - name: Initialize Repo
+      run: |
+        mkdir workspace && cd workspace
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        repo init --depth=1 -u ${{ steps.manifest.outputs.value }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
+  
+    - name: Repo Sync
+      run: |
+        cd workspace
+        repo sync -j$(nproc --all) --force-sync
+
+    - name: Clone Device Tree & Generate Changelog
+      run: |
+        cd workspace
+        git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
+        cd ${{ github.event.inputs.DEVICE_PATH }}
+        echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_ENV
+        git log -10 --pretty=format:"- %s (%h)" > "${GITHUB_WORKSPACE}/changelog.txt" || echo "- (No changelog available)" > "${GITHUB_WORKSPACE}/changelog.txt"
+        sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' "${GITHUB_WORKSPACE}/changelog.txt" > "${GITHUB_WORKSPACE}/changelog_tg.txt"
+
+    - name: Check Build Makefile
+      run: |
+        cd workspace
+        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/twrp_${{ github.event.inputs.DEVICE_NAME }}.mk ]; then
+            echo "DEVICE_MAKEFILE=twrp_${{ github.event.inputs.DEVICE_NAME }}" >> $GITHUB_ENV
+        elif [ -f ${{ github.event.inputs.DEVICE_PATH }}/omni_${{ github.event.inputs.DEVICE_NAME }}.mk ]; then
+            echo "DEVICE_MAKEFILE=omni_${{ github.event.inputs.DEVICE_NAME }}" >> $GITHUB_ENV
+        else
+            echo "No recovery makefile found!" && exit 1
+        fi
+      
+    - name: Install Python 2 (Fallback)
+      if: ${{ !contains(github.event.inputs.MANIFEST_BRANCH, 'twrp-11') && !contains(github.event.inputs.MANIFEST_BRANCH, 'twrp-12.1') && !contains(github.event.inputs.MANIFEST_BRANCH, 'twrp-14') }}
+      run: |
+        sudo apt -y install python2
+        sudo ln -sf /usr/bin/python2 /usr/bin/python
+
+    - name: Building Image 
+      run: |
+        cd workspace
+        source build/envsetup.sh
+        export ALLOW_MISSING_DEPENDENCIES=true
+        lunch ${{ env.DEVICE_MAKEFILE }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
+      
+    - name: Define Metadata Variables
+      run: |
+        echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+        DEVICE_TREE_URL="${{ github.event.inputs.DEVICE_TREE }}"
+        echo "DEVICE_TREE_URL=${DEVICE_TREE_URL%.git}" >> $GITHUB_ENV
+
+    - name: Verify Recovery Output
+      run: |
+        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}
+        if [ -f recovery.img ]; then
+            echo "RECOVERY_TYPE=recovery" >> $GITHUB_ENV
+            echo "MD5_IMG=$(md5sum recovery.img | cut -d ' ' -f 1)" >> $GITHUB_ENV
+        elif [ -f boot.img ]; then
+            echo "RECOVERY_TYPE=boot" >> $GITHUB_ENV
+            echo "MD5_IMG=$(md5sum boot.img | cut -d ' ' -f 1)" >> $GITHUB_ENV
+        elif [ -f vendor_boot.img ]; then
+            echo "RECOVERY_TYPE=vendor_boot" >> $GITHUB_ENV
+            echo "MD5_IMG=$(md5sum vendor_boot.img | cut -d ' ' -f 1)" >> $GITHUB_ENV
+        else
+            echo "Build failed: Image not found!" && exit 1
+        fi
+        echo "CHECK_IMG_IS_OK=true" >> $GITHUB_ENV
+
+    - name: Include Recovery Installer
+      if: github.event.inputs.RECOVERY_INSTALLER == 'true' && env.CHECK_IMG_IS_OK == 'true'
+      run: |
+        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}
+        wget -q https://github.com/kinguser981/recovery-installer/releases/download/zip/recovery-installer.zip
+        zip -ur recovery-installer.zip ${{ env.RECOVERY_TYPE }}.img
+
+    - name: Create TAR for Samsung
+      if: github.event.inputs.RECOVERY_TAR == 'true' && env.CHECK_IMG_IS_OK == 'true'
+      run: |
+        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}
+        tar -cvf ${{ env.RECOVERY_TYPE }}.tar ${{ env.RECOVERY_TYPE }}.img
+
+    - name: Generate Release Notes
+      if: env.CHECK_IMG_IS_OK == 'true'
+      run: |
+        cat > "${GITHUB_WORKSPACE}/release_notes.md" <<EOF
+        **Build:** ${{ github.event.inputs.MANIFEST_BRANCH }}
+        **Device:** [Device Tree](${{ env.DEVICE_TREE_URL }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }})
+        **Commit:** [${{ env.COMMIT_ID }}](${{ env.DEVICE_TREE_URL }}/commit/${{ env.COMMIT_ID }})
+        
+        ### 📑 Changelog (Last 10 Commits)
+        $(cat "${GITHUB_WORKSPACE}/changelog.txt")
+        EOF
+        
+    - name: Upload GitHub Release
+      if: env.CHECK_IMG_IS_OK == 'true'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ env.RECOVERY_TYPE }}.tar
+          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery-installer.zip
+          workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ env.RECOVERY_TYPE }}.img
+        name: TWRP Unofficial - ${{ github.event.inputs.DEVICE_NAME }} (${{ env.BUILD_DATE }})
+        tag_name: build-${{ github.run_id }}
+        body_path: ${{ github.workspace }}/release_notes.md
+
+    - name: Check Missing Dependencies (LDCHECK)
+      run: |
+        cd tools
+        mv -n libneeds ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/ || true
+        mv -n ldcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/ || true
+        cd ../workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
+        python3 ldcheck -p system/lib64:vendor/lib64:system/lib:vendor/lib -d ${{ github.event.inputs.LDCHECK }} || true
+
+    - name: "Telegram: Upload Release & Notify Finish"
+      if: env.CHECK_IMG_IS_OK == 'true' && github.event.inputs.SEND_TO_TELEGRAM == 'true'
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      run: |
+        if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+          echo "Telegram secrets missing. Skipping notification."
+          exit 0
+        fi
+        
+        RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/build-${{ github.run_id }}"
+        
+        cat > "${GITHUB_WORKSPACE}/tg_done.txt" <<EOF
+        ✅ <b>TWRP Build Completed!</b>
+        
+        📱 <b>Device:</b> <code>${{ github.event.inputs.DEVICE_NAME }}</code>
+        🎯 <b>Target:</b> <code>${{ env.RECOVERY_TYPE }}.img</code>
+        📦 <b>MD5:</b> <code>${{ env.MD5_IMG }}</code>
+        📅 <b>Date:</b> ${{ env.BUILD_DATE }}
+        
+        🔗 <a href="${RELEASE_URL}">Download via GitHub</a>
+        
+        <b>📑 Changelog:</b>
+        $(cat "${GITHUB_WORKSPACE}/changelog_tg.txt")
+        EOF
+        
+        curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          -d chat_id="${TELEGRAM_CHAT_ID}" \
+          -d parse_mode="HTML" \
+          -d disable_web_page_preview="true" \
+          --data-urlencode text@"${GITHUB_WORKSPACE}/tg_done.txt" || true
+          
+        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}
+        
+        send_file() {
+          local file="$1"
+          [ ! -f "$file" ] && return 0
+          
+          local size=$(stat -c%s "$file")
+          local max=$((49 * 1024 * 1024))
+          
+          if [ "$size" -le "$max" ]; then
+            curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+              -F chat_id="${TELEGRAM_CHAT_ID}" \
+              -F document=@"${file}" \
+              -F caption="📦 $(basename "$file") | ${{ github.event.inputs.DEVICE_NAME }}"
+          else
+            curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d parse_mode="HTML" \
+              -d text="⚠️ <b>File terlalu besar!</b>%0AFile <code>$(basename "$file")</code> melebihi batas 50MB Telegram. Silakan unduh melalui GitHub Releases." || true
+          fi
+        }
+        
+        send_file "${{ env.RECOVERY_TYPE }}.img"
+        [ "${{ github.event.inputs.RECOVERY_INSTALLER }}" = "true" ] && send_file "recovery-installer.zip"
+        [ "${{ github.event.inputs.RECOVERY_TAR }}" = "true" ] && send_file "${{ env.RECOVERY_TYPE }}.tar"
